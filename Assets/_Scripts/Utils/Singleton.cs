@@ -17,6 +17,7 @@ namespace Promorph.Utils
                     {
                         GameObject singletonObject = new(typeof(T).Name);
                         _instance = singletonObject.AddComponent<T>();
+                        DontDestroyOnLoad(singletonObject);
                     }
                 }
                 return _instance;

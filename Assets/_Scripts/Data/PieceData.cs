@@ -1,3 +1,4 @@
+using System;
 using Promorph.Board;
 using UnityEngine;
 
@@ -7,13 +8,22 @@ namespace Promorph.Data
     public class PieceData : ScriptableObject
     {
         public EChessPiece Type;
-        public Sprite Icon;
-        public Vector2Int[] MoveSet;
-        public Vector2Int[] CaptureSet;
-        
+        public Sprite WhiteIcon;
+        public Sprite BlackIcon;
+        public MovePattern MoveSet;
+        public MovePattern CaptureSet;
+
         // Double square for pawns, castling, etc.
-        public Vector2Int[] FirstMoveSet;
+        public MovePattern SpecialMoveSet;
         // Special moves like en passant, etc.
-        public Vector2Int[] SpecialCaptureSet;
+        public MovePattern SpecialCaptureSet;
+    }
+
+    [Serializable]
+    public class MovePattern
+    {
+        public Vector2Int[] Steps;
+        public Vector2Int[] Directions;
+        public int MaxDistance;
     }
 }

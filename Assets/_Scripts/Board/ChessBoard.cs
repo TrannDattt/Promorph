@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Promorph.Data;
 using UnityEngine;
@@ -19,11 +20,12 @@ namespace Promorph.Board
         [SerializeField] private Tilemap _tilemap;
 
         private const int BoardSize = 8;
+        private const int HalfBoardSize = BoardSize / 2;
 
         private Dictionary<Vector2Int, BoardTile> _tileDict = new();
         private List<Vector2Int> _highltightedPos = new();
 
-        public UnityEvent<Vector2Int, EPieceAction> OnTileClicked;
+        public UnityEvent<Vector2Int> OnTileClicked;
 
         public void SetBoardData(BoardData boardData, bool generateNew = false)
         {
@@ -39,7 +41,7 @@ namespace Promorph.Board
             }
         }
 
-        private void GenerateBoard()
+        public void GenerateBoard()
         {
             _tileDict.Clear();
             _highltightedPos.Clear();
@@ -49,9 +51,8 @@ namespace Promorph.Board
             {
                 for (int y = 0; y < BoardSize; y++)
                 {
-                    int halfSize = BoardSize / 2;
-                    var tilePosition = new Vector3Int(x - halfSize, y - halfSize, 0);
-                    var tile = new BoardTile((x + y) % 2 == 0 ? _lightTile : _darkTile);
+                    var tilePosition = new Vector3Int(x - HalfBoardSize, y - HalfBoardSize, 0);
+                    var tile = new BoardTile((x + y) % 2 == 0 ? _darkTile : _lightTile);
 
                     _tilemap.SetTile(tilePosition, tile.Tile);
                     _tileDict.Add(new Vector2Int(tilePosition.x, tilePosition.y), tile);
@@ -59,12 +60,41 @@ namespace Promorph.Board
             }
         }
 
-        public Vector2Int GetPositionInBoard(Vector3 worldPosition)
+        public void SetupPieces(List<ChessPiece> whitePieces, List<ChessPiece> blackPieces)
+        {
+            for (int y = 0; y < BoardSize; y++)
+            {
+                for (int x = 0; x < BoardSize; x++)
+                {
+                    var pieceIndex = y * BoardSize + x;
+                    if( pieceIndex >= whitePieces.Count || pieceIndex >= blackPieces.Count)
+                    {
+                        return;
+                    }
+                    var whitePiece = whitePieces[pieceIndex];
+                    var blackPiece = blackPieces[pieceIndex];
+                    whitePiece.ChangeFaction(EFaction.White);
+                    blackPiece.ChangeFaction(EFaction.Black);
+
+                    var whitePosition = new Vector2Int(x - HalfBoardSize, y - HalfBoardSize);
+                    var blackPosition = new Vector2Int(-whitePosition.x - 1, -whitePosition.y - 1);
+                    var whiteTile = _tileDict[whitePosition];
+                    var blackTile = _tileDict[blackPosition];
+
+                    whiteTile.SetOccupyingPiece(whitePiece);
+                    blackTile.SetOccupyingPiece(blackPiece);
+                    whitePiece.transform.position = BoardToWorldPosition(whitePosition);
+                    blackPiece.transform.position = BoardToWorldPosition(blackPosition);
+                }
+            }
+        }
+
+        public Vector2Int WorldToBoardPosition(Vector3 worldPosition)
         {
             return (Vector2Int)_tilemap.WorldToCell(worldPosition);
         }
 
-        public BoardTile GetTileByPosition(Vector2Int position)
+        public BoardTile BoardPositionToTile(Vector2Int position)
         {
             if (!_tileDict.ContainsKey(position))
             {
@@ -75,7 +105,19 @@ namespace Promorph.Board
             return _tileDict[position];
         }
 
-        public Vector2 GetTilePosition(Vector2Int position)
+        public Vector2 TileToWorldPosition(BoardTile tile)
+        {
+            if (!_tileDict.ContainsValue(tile))
+            {
+                Debug.LogError($"Tile {tile} is not valid on the board.");
+                return Vector2.zero;
+            }
+
+            var position = _tileDict.FirstOrDefault(x => x.Value == tile).Key;
+            return _tilemap.GetCellCenterWorld(new(position.x, position.y, 0));
+        }
+
+        public Vector2 BoardToWorldPosition(Vector2Int position)
         {
             if (!_tileDict.ContainsKey(position))
             {
@@ -88,8 +130,7 @@ namespace Promorph.Board
 
         public bool IsValidPosition(Vector2Int position)
         {
-            Debug.Log($"Checking if position {position} is valid on the board.");
-            //TODO: Tiles that opcupied by ally pieces is not valid
+            // Debug.Log($"Checking if position {position} is valid on the board.");
             return _tilemap.HasTile(new(position.x, position.y, 0));
         }
 
@@ -99,7 +140,7 @@ namespace Promorph.Board
 
             if (!_tileDict.ContainsKey(position))
             {
-                Debug.LogError($"Position {position} is not valid on the board.");
+                Debug.LogWarning($"Position {position} is not valid on the board.");
                 return false;
             }
 
@@ -115,6 +156,7 @@ namespace Promorph.Board
 
         public void HighlightTile(Vector2Int position, EPieceAction action)
         {
+            Debug.Log($"Highlighting tile at {position} with action {action}.");
             var tilePosition = new Vector3Int(position.x, position.y, 0);
             var tile = _tileDict[position];
             // _tilemap.SetTileFlags(tilePosition, TileFlags.None);
@@ -122,11 +164,11 @@ namespace Promorph.Board
             {
                 EPieceAction.Move => _moveHighlightTile,
                 EPieceAction.Capture => _captureHighlightTile,
-                EPieceAction.FirstMove => _firstMoveHighlightTile,
-                _ => throw new ArgumentOutOfRangeException(nameof(action), action, null)
+                _ => _firstMoveHighlightTile
             };
             _tilemap.SetTile(tilePosition, tileToUse);
             tile.SetTile(tileToUse);
+            // Debug.Log($"Setting tile {tile} to {tile.Tile}.");
 
             _highltightedPos.Add(position);
         }
@@ -139,7 +181,7 @@ namespace Promorph.Board
             foreach (var pos in _highltightedPos)
             {
                 var tile = _tileDict[pos];
-                var tileSprite = (pos.x + pos.y) % 2 == 0 ? _lightTile : _darkTile;
+                var tileSprite = (pos.x + pos.y) % 2 == 0 ? _darkTile : _lightTile;
                 tile.SetTile(tileSprite);
                 _tilemap.SetTile(new Vector3Int(pos.x, pos.y, 0), tileSprite);
             }
@@ -147,37 +189,36 @@ namespace Promorph.Board
             _highltightedPos.Clear();
         }
 
-        void Start()
-        {
-            GenerateBoard();
-        }
-
         void Update()
         {
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
                 Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                var tilePos = GetPositionInBoard(mouseWorldPos);
-                Debug.Log($"Mouse clicked at tile position: {tilePos}");
+                var tilePos = WorldToBoardPosition(mouseWorldPos);
+                var tile = _tileDict[tilePos];
 
                 //TODO: Make sure check if tile is valid
                 if (_highltightedPos.Contains(tilePos))
                 {
-                    var tile = _tileDict[tilePos];
-                    if (tile.Tile == _captureHighlightTile)
-                    {
-                        OnTileClicked?.Invoke(tilePos, EPieceAction.Capture);
-                        Debug.Log($"Capture at tile {tilePos}.");
-                    }
-                    else if (tile.Tile == _moveHighlightTile || tile.Tile == _firstMoveHighlightTile)
-                    {
-                        OnTileClicked?.Invoke(tilePos, EPieceAction.Move);
-                        Debug.Log($"Move to tile {tilePos}.");
-                    }
+                    OnTileClicked?.Invoke(tilePos);
+                    // if (tile.Tile == _captureHighlightTile)
+                    // {
+                    //     Debug.Log($"Capture at tile {tilePos}.");
+                    // }
+                    // else if (tile.Tile == _moveHighlightTile || tile.Tile == _firstMoveHighlightTile)
+                    // {
+                    //     OnTileClicked?.Invoke(tilePos, EPieceAction.Move);
+                    //     Debug.Log($"Move to tile {tilePos}.");
+                    // }
                 }
                 else
                 {
-                    // Debug.Log($"Tile at {tilePos} is not highlighted.");
+                    if (tile.OccupyingPiece != null)
+                    {
+                        tile.OccupyingPiece.OnPieceClicked();
+                        // OnTileClicked?.Invoke(tilePos, EPieceAction.FirstMove);
+                        // Debug.Log($"First move at tile {tilePos}.");
+                    }
                 }
             }
         }
@@ -202,6 +243,7 @@ namespace Promorph.Board
         public void SetOccupyingPiece(ChessPiece piece)
         {
             OccupyingPiece = piece;
+            // Debug.Log($"Set occupying piece: {(piece != null ? piece.Type : "null")}");
         }
     }
 }

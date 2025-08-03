@@ -13,11 +13,37 @@ MonoBehaviour:
   m_Name: Knight
   m_EditorClassIdentifier: 
   Type: 2
-  Icon: {fileID: 21300000, guid: a4bde53ec7c104f868be7329e31dd480, type: 3}
+  WhiteIcon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
+  BlackIcon: {fileID: 21300000, guid: ee8ce5cd9c0883f4182b5cfd43cfd7fe, type: 3}
   MoveSet:
-  - {x: 0, y: 1}
+    Steps:
+    - {x: 1, y: 2}
+    - {x: 1, y: -2}
+    - {x: -1, y: 2}
+    - {x: -1, y: -2}
+    - {x: 2, y: 1}
+    - {x: 2, y: -1}
+    - {x: -2, y: 1}
+    - {x: -2, y: -1}
+    Directions: []
+    MaxDistance: 0
   CaptureSet:
-  - {x: 1, y: 1}
-  - {x: -1, y: 1}
-  FirstMoveSet: []
-  SpecialCaptureSet: []
+    Steps:
+    - {x: 1, y: 2}
+    - {x: 1, y: -2}
+    - {x: -1, y: 2}
+    - {x: -1, y: -2}
+    - {x: 2, y: 1}
+    - {x: 2, y: -1}
+    - {x: -2, y: 1}
+    - {x: -2, y: -1}
+    Directions: []
+    MaxDistance: 0
+  SpecialMoveSet:
+    Steps: []
+    Directions: []
+    MaxDistance: 0
+  SpecialCaptureSet:
+    Steps: []
+    Directions: []
+    MaxDistance: 0
