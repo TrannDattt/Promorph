@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Promorph.Utils
 {
-    public abstract class Singleton<T> : MonoBehaviour where T : MonoBehaviour
+    public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
     {
         private static T _instance;
 
@@ -17,7 +17,6 @@ namespace Promorph.Utils
                     {
                         GameObject singletonObject = new(typeof(T).Name);
                         _instance = singletonObject.AddComponent<T>();
-                        DontDestroyOnLoad(singletonObject);
                     }
                 }
                 return _instance;
@@ -33,6 +32,29 @@ namespace Promorph.Utils
             else
             {
                 _instance = this as T;
+            }
+        }
+    }
+
+    public abstract class PersistentSingleton<T> : Singleton<T> where T : MonoBehaviour
+    {
+        private static T _instance;
+
+        public new static T Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = FindAnyObjectByType<T>();
+                    if (_instance == null)
+                    {
+                        GameObject singletonObject = new(typeof(T).Name);
+                        _instance = singletonObject.AddComponent<T>();
+                        DontDestroyOnLoad(singletonObject);
+                    }
+                }
+                return _instance;
             }
         }
     }

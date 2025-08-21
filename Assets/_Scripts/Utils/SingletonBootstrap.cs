@@ -18,15 +18,18 @@ namespace Promorph.Utils
             {
                 var singletonTypes = assembly.GetTypes()
                     .Where(t => t.IsClass && !t.IsAbstract)
-                    .Where(t => IsSubclassOfRawGeneric(typeof(Singleton<>), t));
+                    .Where(t => IsSubclassOfRawGeneric(typeof(PersistentSingleton<>), t));
 
                 foreach (var type in singletonTypes)
                 {
                     var instanceProperty = type.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
                     if (instanceProperty != null)
                     {
-                        var _ = instanceProperty.GetValue(null);
-                        // Debug.Log($"[SingletonBootstrap] Initialized singleton: {type.Name}");
+                        var currentInstance = instanceProperty.GetValue(null);
+                        if (currentInstance == null)
+                        {
+                            var _ = instanceProperty.GetValue(null);
+                        }
                     }
                 }
             }

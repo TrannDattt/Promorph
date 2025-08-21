@@ -8,10 +8,10 @@ namespace Promorph.Board
     public class ChessPiece : MonoBehaviour
     {
         [SerializeField] private PieceData _data;
-        [SerializeField] private EFaction _faction;
+        [field: SerializeField] public EFaction Faction {get; private set;}
         public EChessPiece Type => _data.Type;
-        public Vector2Int[] MoveSet => GetMoveSet(_data.MoveSet, EPieceAction.Move);
-        public Vector2Int[] CaptureSet => GetMoveSet(_data.CaptureSet, EPieceAction.Capture);
+        public Vector2Int[] MoveSet => GetMoves();
+        public Vector2Int[] CaptureSet => GetCaptures(false);
 
         private SpriteRenderer _spriteRenderer;
         public UnityEvent OnClicked;
@@ -25,8 +25,8 @@ namespace Promorph.Board
 
         public void ChangeFaction(EFaction faction)
         {
-            _faction = faction;
-            _spriteRenderer.sprite = _faction == EFaction.White ? _data.WhiteIcon : _data.BlackIcon; 
+            Faction = faction;
+            _spriteRenderer.sprite = Faction == EFaction.White ? _data.WhiteIcon : _data.BlackIcon; 
         }
         
         // public void Initialize()
@@ -35,7 +35,7 @@ namespace Promorph.Board
         //     _spriteRenderer.sprite = _data.Icon;
         // }
 
-        private Vector2Int[] GetMoveSet(MovePattern pattern, EPieceAction action)
+        private Vector2Int[] GetMoveSet(MovePattern pattern, EPieceAction action, bool ignoreBlocked = false)
         {
             var moves = new List<Vector2Int>();
 
@@ -51,12 +51,17 @@ namespace Promorph.Board
                 {
                     var posMove = new Vector2Int(direction.x * i, direction.y * i);
                     if (moves.Contains(posMove)) continue;
+
+                    // Piece cant capture or move to a tile that is blocked by an ally piece
                     if (BoardManager.Instance.CheckTileBlock(this, posMove, out ChessPiece piece) && (CheckIsAllyPiece(piece) || action == EPieceAction.Move))
                     {
+                        if (ignoreBlocked)
+                        {
+                            moves.Add(posMove);
+                        }
                         break;
                     }
                     moves.Add(posMove);
-                    Debug.Log($"Add pos {action} move: {posMove}");
                     if (BoardManager.Instance.CheckTileBlock(this, posMove, out piece) && !CheckIsAllyPiece(piece))
                     {
                         break;
@@ -69,6 +74,10 @@ namespace Promorph.Board
                     if (moves.Contains(negMove)) continue;
                     if (BoardManager.Instance.CheckTileBlock(this, negMove, out ChessPiece piece) && (CheckIsAllyPiece(piece) || action == EPieceAction.Move))
                     {
+                        if (ignoreBlocked)
+                        {
+                            moves.Add(negMove);
+                        }
                         break;
                     }
                     moves.Add(negMove);
@@ -79,19 +88,15 @@ namespace Promorph.Board
                     }
                 }
             }
-
-            // Debug.Log("Move set generated:");
-            // foreach (var move in moves)
-            // {
-            //     Debug.Log($"Move: {move}");
-            // }
-
             return moves.ToArray();
         }
 
+        public Vector2Int[] GetMoves() => GetMoveSet(_data.MoveSet, EPieceAction.Move);
+        public Vector2Int[] GetCaptures(bool ignoreBlocked) => GetMoveSet(_data.CaptureSet, EPieceAction.Capture, ignoreBlocked);
+
         public bool CheckIsAllyPiece(ChessPiece otherPiece)
         {
-            return otherPiece != null && otherPiece._faction == _faction;
+            return otherPiece != null && otherPiece.Faction == Faction;
         }
 
         public void Move(Vector2 targetPosition)

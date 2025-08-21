@@ -8,6 +8,7 @@ namespace Promorph.Data
     public class PieceData : ScriptableObject
     {
         public EChessPiece Type;
+        public int Value;
         public Sprite WhiteIcon;
         public Sprite BlackIcon;
         public MovePattern MoveSet;

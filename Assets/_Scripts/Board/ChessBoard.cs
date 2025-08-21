@@ -67,24 +67,30 @@ namespace Promorph.Board
                 for (int x = 0; x < BoardSize; x++)
                 {
                     var pieceIndex = y * BoardSize + x;
-                    if( pieceIndex >= whitePieces.Count || pieceIndex >= blackPieces.Count)
+                    if( pieceIndex >= whitePieces.Count && pieceIndex >= blackPieces.Count)
                     {
                         return;
                     }
-                    var whitePiece = whitePieces[pieceIndex];
-                    var blackPiece = blackPieces[pieceIndex];
-                    whitePiece.ChangeFaction(EFaction.White);
-                    blackPiece.ChangeFaction(EFaction.Black);
 
+                    var whitePiece = pieceIndex >= whitePieces.Count ? null : whitePieces[pieceIndex];
                     var whitePosition = new Vector2Int(x - HalfBoardSize, y - HalfBoardSize);
-                    var blackPosition = new Vector2Int(-whitePosition.x - 1, -whitePosition.y - 1);
-                    var whiteTile = _tileDict[whitePosition];
-                    var blackTile = _tileDict[blackPosition];
+                    if (whitePiece != null)
+                    {
+                        whitePiece.ChangeFaction(EFaction.White);
+                        var whiteTile = _tileDict[whitePosition];
+                        whiteTile.SetOccupyingPiece(whitePiece);
+                        whitePiece.transform.position = BoardToWorldPosition(whitePosition);
+                    }
 
-                    whiteTile.SetOccupyingPiece(whitePiece);
-                    blackTile.SetOccupyingPiece(blackPiece);
-                    whitePiece.transform.position = BoardToWorldPosition(whitePosition);
-                    blackPiece.transform.position = BoardToWorldPosition(blackPosition);
+                    var blackPiece = pieceIndex >= blackPieces.Count ? null : blackPieces[pieceIndex];
+                    var blackPosition = new Vector2Int(-whitePosition.x - 1, -whitePosition.y - 1);
+                    if (blackPiece != null)
+                    {
+                        blackPiece.ChangeFaction(EFaction.Black);
+                        var blackTile = _tileDict[blackPosition];
+                        blackTile.SetOccupyingPiece(blackPiece);
+                        blackPiece.transform.position = BoardToWorldPosition(blackPosition);
+                    }
                 }
             }
         }
@@ -195,6 +201,11 @@ namespace Promorph.Board
             {
                 Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 var tilePos = WorldToBoardPosition(mouseWorldPos);
+                if (!_tileDict.ContainsKey(tilePos))
+                {
+                    return;
+                }
+
                 var tile = _tileDict[tilePos];
 
                 //TODO: Make sure check if tile is valid

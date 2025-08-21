@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Queen
   m_EditorClassIdentifier: 
   Type: 4
-  WhiteIcon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
-  BlackIcon: {fileID: 21300000, guid: ee8ce5cd9c0883f4182b5cfd43cfd7fe, type: 3}
+  Value: 10
+  WhiteIcon: {fileID: 21300000, guid: 4533a6b09de8ada4883bc1c9c99b1726, type: 3}
+  BlackIcon: {fileID: 21300000, guid: 74747dc4684da7843ae9befb4da413b4, type: 3}
   MoveSet:
     Steps: []
     Directions:

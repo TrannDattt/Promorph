@@ -10,28 +10,30 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4bf812e0425358843b7ba50a44f6527a, type: 3}
-  m_Name: Rook
+  m_Name: Pawn
   m_EditorClassIdentifier: 
-  Type: 1
-  WhiteIcon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
-  BlackIcon: {fileID: 21300000, guid: ee8ce5cd9c0883f4182b5cfd43cfd7fe, type: 3}
+  Type: 0
+  Value: 1
+  WhiteIcon: {fileID: 21300000, guid: 3c561faa1dba80541873fabc1762ddd3, type: 3}
+  BlackIcon: {fileID: 21300000, guid: bf0cd639767613e40b57451232d44982, type: 3}
   MoveSet:
-    Steps: []
-    Directions:
-    - {x: 1, y: 0}
+    Steps:
     - {x: 0, y: 1}
-    MaxDistance: 7
+    Directions: []
+    MaxDistance: 0
   CaptureSet:
-    Steps: []
-    Directions:
-    - {x: 1, y: 0}
-    - {x: 0, y: 1}
-    MaxDistance: 7
+    Steps:
+    - {x: 1, y: 1}
+    - {x: -1, y: 1}
+    Directions: []
+    MaxDistance: 0
   SpecialMoveSet:
     Steps: []
     Directions: []
     MaxDistance: 0
   SpecialCaptureSet:
-    Steps: []
+    Steps:
+    - {x: 1, y: 0}
+    - {x: -1, y: 0}
     Directions: []
     MaxDistance: 0
